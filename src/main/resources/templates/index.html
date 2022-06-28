@@ -1,11 +1,226 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 <body>
+<div class="container">
+    <h1>Verificación de Firma Banxico</h1>
+    <div class="alert alert-success d-none" role="alert" id="alertOk">
+        Firma verificada!
+    </div>
+    <form>
+        <div class="form-group">
+            <label for="certificado">Certificado (.cer .crt)<span class="text-danger">*</span>:</label>
+            <input type="file" accept=".cer,.crt" class="form-control-file" id="certificado" required onchange="handleChangeCert(event);">
+            <input type="hidden" id="cnHidden">
+            <input type="hidden" id="serialNumberHidden">
+            <span id="commonName"></span>
+            <span id="serialNumber"></span>
 
-Si funciono
+        </div>
+        <div class="form-group">
+            <label for="privateKey">Clave privada (.cve)<span class="text-danger">*</span>:</label>
+            <input type="file" accept=".cve" class="form-control-file" id="privateKey" required > <!-- onchange="handleChangeCve(event);" -->
+        </div>
+        <div class="form-group">
+            <label for="passphrase">Frase de seguridad<span class="text-danger">*</span>:</label>
+            <input type="password" class="form-control" id="passphrase" placeholder="Frase de seguridad" required>
+        </div>
+        <div class="form-group">
+            <label for="textUser">Texto<span class="text-danger">*</span>:</label>
+            <input type="text" class="form-control" id="textUser" placeholder="Texto" required>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="verifySign()">Verificar firma</button>
+    </form>
+</div>
+<button onclick="signTextUser()"> ok</button>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/node-forge@1.0.0/dist/forge.min.js"></script>
+<script type="text/javascript">
+
+    $( document ).ready( function() {
+    } );
+
+    function validateSignApi(encodedSign){
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:8080/banxico/api/checkSign/validate");
+        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+
+        xhr.onload = () => {
+            console.log("Response validate rest services");
+            //console.log(xhr.responseText);
+            if (xhr.status === 200) {
+                let response = JSON.parse(xhr.responseText);
+                let result = response.result;
+                let fields = result.split('|');
+                // TODO Implementar lógica de verificación de firma del back y lógica para mostrar y limpiar el formulario
+                let code = fields[0];
+                let msj = fields[1];
+                console.log(code);
+                console.log(msj);
+                let element = document.getElementById("alertOk");
+                element.classList.remove("d-none");
+                element.classList.add("d-block");
+            }
+
+        };
+        // TODO Pasar como parámetros de la función
+        let cn = document.getElementById("cnHidden").value;
+        let serialNumber = document.getElementById("serialNumberHidden").value;
+        let textUser = document.getElementById("textUser").value;
+        // TODO utilizar object y parsearlo a json
+        let data = `{
+                "text": "${textUser}",
+                "cn": "${cn}",
+                "serie": "${serialNumber}",
+                "sign": "${encodedSign}"
+            }`;
+        xhr.send(data);
+    }
+
+    function handleChangeCert(event) {
+        let fileContent = event.target.files[0];
+        let fileName = event.target.files[0].name;
+        let fileExt = fileName.substr(fileName.lastIndexOf('.') + 1, fileName.length);
+        let fileReader = new FileReader();
+        if(fileExt === 'cer')
+        {
+            fileReader.readAsArrayBuffer(fileContent);
+            fileReader.onload = function () {
+                var raw = forge.util.createBuffer( fileReader.result );
+                var cert = forge.pki.certificateFromAsn1( forge.asn1.fromDer( raw ));
+                //console.log("cert from cer")
+                //console.log(cert)
+                getDataValueCert(cert);
+            };
+        }else if(fileExt === 'crt')
+        {
+            fileReader.readAsText(fileContent);
+            fileReader.onload = function () {
+                //console.log(fileReader.result);
+                var cert = forge.pki.certificateFromPem( fileReader.result );
+                //console.log("cert from crt")
+                //console.log(cert)
+                getDataValueCert(cert);
+            };
+        }
+    }
+
+    function getDataValueCert(cert) {
+        for (const item in cert.subject.attributes) {
+            //console.log(item,cert.subject.attributes[item])
+            if (cert.subject.attributes[item].type === '2.5.4.3') {
+                document.getElementById('commonName').innerHTML = `CN: ${cert.subject.attributes[item].value}`;
+                document.getElementById("cnHidden").value = cert.subject.attributes[item].value;
+            }
+        }
+        document.getElementById('serialNumber').innerHTML = `Serial Number: ${cert.serialNumber}`;
+        document.getElementById("serialNumberHidden").value = cert.serialNumber;
+    }
+
+    function handleChangeCve(event) {
+        let fileContent = event.target.files[0];
+        let fileName = event.target.files[0].name;
+        let fileExt = fileName.substr(fileName.lastIndexOf('.') + 1, fileName.length);
+        let fileReader = new FileReader();
+        if(fileExt === 'cve')
+        {
+            fileReader.readAsText(fileContent);
+            fileReader.onload = function () {
+                console.log(fileReader.result);
+                var privateKey = forge.pki.decryptRsaPrivateKey(fileReader.result, 'usuario00');
+                if (!privateKey || privateKey.length <= 1) {
+                    throw new Error('Clave privada ó frase de seguridad no válido');
+                }
+                // wraps and encrypts a Forge private key and outputs it in PEM format
+                //var pem = pki.encryptRsaPrivateKey(privateKey, 'password');
+                console.log("privateKeyFromPem from cve")
+                console.log(privateKey)
+                // sign data with a private key and output DigestInfo DER-encoded bytes
+                // (defaults to RSASSA PKCS#1 v1.5)
+                var md = forge.md.sha1.create();
+                md.update('sign this', 'utf8');
+                var signature = privateKey.sign(md);
+                console.log(signature);
+                var encoded = forge.util.encode64(signature);
+                console.log(encoded);
+
+            };
+        }else{
+            //implementar formato binario PKCS8
+            alert("File clave privada not supported.")
+        }
+    }
+
+    function verifySign(){
+        let textUser = document.getElementById("textUser").value;
+        let cn = document.getElementById("cnHidden").value;
+        let serialNumber = document.getElementById("serialNumberHidden").value;
+        let passphrase = document.getElementById("passphrase").value;
+        if(!textUser || textUser.trim().length === 0 || !cn || !serialNumber || !passphrase || passphrase.trim().length === 0)
+        {
+            alert("Error, verifique los campos obligatorios.");
+            return;
+        }
+        console.log("Sign Text");
+        signTextUser();
+    }
+    function signTextUser(){
+        let textUser = document.getElementById("textUser").value;
+        let cn = document.getElementById("cnHidden").value;
+        let serialNumber = document.getElementById("serialNumberHidden").value;
+        let dataSign = textUser + cn + serialNumber;
+        console.log(dataSign);
+        //console.log(document.getElementById("privateKey").files[0]);
+        let fileContent = document.getElementById("privateKey").files[0];
+        let fileName = fileContent.name;
+        let fileExt = fileName.substr(fileName.lastIndexOf('.') + 1, fileName.length);
+        let fileReader = new FileReader();
+        let pass = document.getElementById("passphrase").value;
+        if(fileExt === 'cve')
+        {
+            fileReader.readAsText(fileContent);
+            fileReader.onload = function () {
+                //console.log(fileReader.result);
+                //console.log(pass);
+                // TODO Controlar excepción Too few bytes to read ASN.1 value y otros no esperados
+                var privateKey = forge.pki.decryptRsaPrivateKey(fileReader.result, pass.toString());
+                if (!privateKey || privateKey.length <= 1) {
+                    alert("Error, al firmar, verifique su frase de seguridad ó clave privada.")
+                    throw new Error('Clave privada ó frase de seguridad no válido');
+                }
+                //console.log("privateKeyFromPem from cve - success")
+                //console.log(privateKey)
+                // sign data with a private key and output DigestInfo DER-encoded bytes
+                // (defaults to RSASSA PKCS#1 v1.5)
+                var md = forge.md.sha1.create();
+                md.update('sign this', 'utf8');
+                var signature = privateKey.sign(md);
+                //console.log(signature);
+                var encodedSign = forge.util.encode64(signature);
+                //console.log(encodedSign);
+                console.log("Call api validate");
+                validateSignApi(encodedSign)
+
+            };
+        }else{
+            //implementar formato binario PKCS8
+            alert("Archivo de clave privada no soportado.")
+        }
+    }
+</script>
 </body>
 </html>
