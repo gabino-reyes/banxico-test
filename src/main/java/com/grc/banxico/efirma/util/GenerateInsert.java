@@ -55,44 +55,26 @@ public class GenerateInsert {
         File fileCrt = new File("src/main/resources/data/usuarios/usuario00/00000100000700000020.crt");
         File filePrivateKey = new File("src/main/resources/data/usuarios/usuario00/usuario00.cve");
         String sign= "gaQEcacdXO0bS3U3k0AcLs4rJqmNIS9GKzzOOxlmKz0EV8PcmnFTrkb4RPdKu18A/RQmlYikHHWo68mrdkzoMXaMCvFVGyrANYFUfRV/71X2FDTvM2Z1IydxatBJ9NwTKbzzGjEsouzOayk6MqIOiSrph6zVxfUty2vspt5UmIZ7bdD6bJJpsZzQISKVgc9UT99bnclU/3TtQiWrf07LNpCIFQH52WrVEF5+dn5LgI41IE1p6Ob+r1Hi7h+oqmlYwFLBy5bR5CIDzbTPk8vqN+avg0i3m3IB6G3CPbqS5ynxVkW//B8tudGS98kwLWMOwqnyH42udstHo81PPrioXg==";
-        X509Certificate certificate0 = getCrt(fileCrt);
-        //System.out.println(verifySign(certificate0,sign));
+        String messageOriginal = "gabinousuario 003030303030313030303030373030303030303230";
+        //X509Certificate certificate = getCrt(fileCrt);
+        //System.out.println(verifySign(certificate,sign));
+        //generateInsertStmt();
 
         //getPrivateKey(filePrivateKey, "usuario00");
-        //BigInteger bi = new BigInteger("76292708057987193002565060032465481997");
-        //System.out.println(bi.toString(16));
-        //String key = new String(Files.readAllBytes(fileCrt.toPath()), Charset.defaultCharset());
-        //System.out.println("key = " + key);
-        //CertificateFactory certFactory= CertificateFactory.getInstance("X.509", "BC");
-        //X509Certificate certificate = (X509Certificate) certFactory.generateCertificate(new FileInputStream("src/main/resources/data/usuarios/usuario00/00000100000700000020.crt"));
-        //System.out.println(certificate.getPublicKey());
-        /*X500Principal principal = certificate.getSubjectX500Principal();
+    }
 
-        X500Name x500name = new X500Name( principal.getName() );
-        RDN cn = x500name.getRDNs(BCStyle.CN)[0];
-
-
-
-        /*String publicKeyPEM = key
-                .replace("-----BEGIN CERTIFICATE-----", "")
-                .replaceAll(System.lineSeparator(), "")
-                .replace("-----END CERTIFICATE-----", "");
-
-        System.out.println("publicKeyPEM = " + publicKeyPEM);
-
-        byte[] encoded = Base64.decodeBase64(publicKeyPEM);
-
-        System.out.println("encoded = " + encoded);
-
-        //System.out.println("serial: " + certificate.getSerialNumber().toString(16));
-        //System.out.println("cn: " + cn.getFirst().getValue());
-
-        /*char[] keystorePassword = "password".toCharArray();
-        char[] keyPassword = "password".toCharArray();
-
-        KeyStore keystore = KeyStore.getInstance("PKCS12");
-        keystore.load(new FileInputStream("Baeldung.p12"), keystorePassword);
-        PrivateKey key = (PrivateKey) keystore.getKey("baeldung", keyPassword);*/
+    public static void generateInsertStmt() throws CertificateException, IOException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
+        for (int i = 0; i < 10; i++) {
+            File fileCrt = new File("src/main/resources/data/usuarios/usuario0" + i + "/0000010000070000002" + i + ".crt");
+            String pem = new String(Files.readAllBytes(fileCrt.toPath()), Charset.defaultCharset());
+            X509Certificate certificate = getCrt(fileCrt);
+            X500Principal principal = certificate.getSubjectX500Principal();
+            X500Name x500name = new X500Name( principal.getName() );
+            RDN cn = x500name.getRDNs(BCStyle.CN)[0];
+            //BigInteger serial = certificate.getSerialNumber();
+            //System.out.println(bi.toString(16));
+            System.out.println("insert into certificado_operador values ('" + certificate.getSerialNumber().toString(16) +"' , '" + cn.getFirst().getValue() + "' , '" + pem + "');");
+        }
     }
     public static X509Certificate getCrt() throws IOException, CertificateException, NoSuchProviderException {
         String file = "-----BEGIN CERTIFICATE-----\n" +
@@ -151,6 +133,7 @@ public class GenerateInsert {
         X509Certificate cert = null;
         CertificateFactory factory;
         //CertificateFactory certFactory= CertificateFactory.getInstance("X.509", "BC");
+        //X509Certificate certificate = (X509Certificate) certFactory.generateCertificate(new FileInputStream("src/main/resources/data/usuarios/usuario00/00000100000700000020.crt"));
         InputStream in = new FileInputStream(file);
         //Sin el provider manda otra data
             factory = CertificateFactory.getInstance("X.509", "BC");
@@ -177,14 +160,6 @@ public class GenerateInsert {
         sign.update(message.getBytes("UTF-8"));
         return sign.verify(Base64.decodeBase64(signature.getBytes("UTF-8")));
     }
-    public static boolean verifySignature(PublicKey dsaPublic, byte[] input, byte[] encSignature)
-            throws GeneralSecurityException {
-        Signature signature = Signature.getInstance("SHA1withRSA", "BC");
-        signature.initVerify(dsaPublic);
-        signature.update(input);
-        return signature.verify(encSignature);
-    }
-
 
     //Example 27 – The PKCS#1.5 Signature Format
     public static byte[] generatePkcsSignature(PrivateKey rsaPrivateKey, byte[] input) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
@@ -201,8 +176,6 @@ public class GenerateInsert {
         signature.update(input);
         return signature.verify(encSignature);
     }
-
-
 
     public static void getPrivateKey(File privateKeyFile, String passphrase) throws IOException, PKCSException, OperatorCreationException, NoSuchAlgorithmException, InvalidKeySpecException {
         // Se agrega el provider para encriptar PKCS8 keys
