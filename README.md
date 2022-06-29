@@ -61,7 +61,7 @@ Para ejecutarlo se deberá realizar lo siguiente, en una terminal de comandos ab
 1. Compilar y ejecutar el proyecto, no se debe cerrar la terminal ni matar el proceso que se quede activo, cuando se despliegan los servicios.
 ```shell
 mvn clean install
-java -jar target/medicamentos-doc-dev-1.1.7.jar --server.port=8080
+java -jar target/efirma-0.0.1-SNAPSHOT.jar --server.port=8080
 ```
 2. Si el proyecto se despliega correctamente, se verá un mensaje (con la fecha y hora en la que se levante el servicio):
 ```shell
