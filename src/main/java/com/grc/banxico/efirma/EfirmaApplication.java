@@ -1,5 +1,12 @@
 package com.grc.banxico.efirma;
 
+/**
+ * Clase principal que inicializa valores y configuración de la aplicación restfull
+ * @author Gabino Reyes
+ * @version 1.0
+ * @since   2022-06-24
+ */
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;

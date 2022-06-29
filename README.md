@@ -23,7 +23,17 @@ https://www.baeldung.com/java-bouncy-castle
 https://docs.hidglobal.com/auth-service/docs/buildingapps/javascript/read-different-certificate-key-file-formats-with-javascript.htm
 https://github.com/digitalbazaar/forge
 https://github.com/digitalbazaar/forge#rsa
+https://getbootstrap.com/docs/4.0/getting-started/introduction/
+https://www.npmjs.com/package/node-forge
+https://www.bouncycastle.org/documentation.html
+https://stackoverflow.com/questions/9739121/convert-a-pem-formatted-string-to-a-java-security-cert-x509certificate
+https://stackoverflow.com/questions/26888397/exception-in-thread-main-java-lang-verifyerror-class-org-bouncycastle-asn1-as/26996797#26996797
+https://www.bouncycastle.org/fips-java/BCFipsIn100.pdf
 
+
+Por si se ocupa
+https://stackoverflow.com/questions/3820897/jpa-entity-without-id
+https://stackoverflow.com/questions/4386030/how-to-use-blob-datatype-in-postgres
 
 
 

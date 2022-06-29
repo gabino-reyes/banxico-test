@@ -1,0 +1,69 @@
+package com.grc.banxico.efirma.service.impl;
+
+/**
+ * Clase de servicio para manejar la librería bouncy castle en el manejo de criptografía
+ * @author Gabino Reyes
+ * @version 1.0
+ * @since   2022-06-24
+ */
+
+import com.grc.banxico.efirma.service.ISignatureBouncyService;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.io.*;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+@Service
+public class SignatureBouncyServiceImpl implements ISignatureBouncyService {
+
+    private static final Logger log = LoggerFactory.getLogger(SignatureBouncyServiceImpl.class);
+
+    @Override
+    public X509Certificate loadCertificate(File file) throws FileNotFoundException, CertificateException, NoSuchProviderException {
+        X509Certificate cert;
+        CertificateFactory factory;
+        InputStream in = new FileInputStream(file);
+        // Sin el provider manda otra data
+        factory = CertificateFactory.getInstance("X.509", "BC");
+        cert = (X509Certificate) factory.generateCertificate(in);
+        return cert;
+    }
+
+    @Override
+    public X509Certificate loadCertificate(String pem) throws CertificateException, NoSuchProviderException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
+        /*Reader reader = new StringReader(pem);
+        PemReader pemReader = new PemReader(reader);
+        X509Certificate cert;
+        PemObject pemObject = pemReader.readPemObject();
+        byte[] x509Data = pemObject.getContent();
+        CertificateFactory fact = CertificateFactory.getInstance("X509", "BC");
+        cert = (X509Certificate) fact.generateCertificate(new ByteArrayInputStream(x509Data));*/
+
+        return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(pem.getBytes()));
+    }
+
+    @Override
+    public PrivateKey getPrivateKey(File privateKeyFile, String passphrase) {
+        return null;
+    }
+
+    @Override
+    public boolean verifySignRSAPKCS1(PublicKey publicKey, String originalMessage, String signEncode) throws UnsupportedEncodingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        byte[] sign = Base64.decodeBase64(signEncode.getBytes("UTF8"));
+        Signature signer = Signature.getInstance("SHA1withRSA", "BC");
+        signer.initVerify(publicKey);
+        signer.update(originalMessage.getBytes("UTF8"));
+        return signer.verify(sign);
+    }
+}

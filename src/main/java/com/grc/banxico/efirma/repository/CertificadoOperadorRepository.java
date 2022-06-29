@@ -1,5 +1,12 @@
 package com.grc.banxico.efirma.repository;
 
+/**
+ * Proporciona operaciones CRUD y de paginación, definir queries personalizados para realizar operaciones CRUD en B.D.
+ * @author Gabino Reyes
+ * @version 1.0
+ * @since   2022-06-24
+ */
+
 import com.grc.banxico.efirma.repository.model.CertificadoOperador;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

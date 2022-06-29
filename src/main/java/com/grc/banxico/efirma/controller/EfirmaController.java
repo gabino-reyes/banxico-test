@@ -1,8 +1,7 @@
 package com.grc.banxico.efirma.controller;
 
 /**
- * Controlador que expone los diferentes endpoints del servicio web para la verificación
- * del archivo CER - PEM
+ * Controlador que expone los diferentes endpoints del servicio web para la verificación de la firma
  * @author Gabino Reyes
  * @version 1.0
  * @since   2022-06-24

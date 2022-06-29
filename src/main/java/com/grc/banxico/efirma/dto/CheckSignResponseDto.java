@@ -1,7 +1,7 @@
 package com.grc.banxico.efirma.dto;
 
 /**
- * Objeto de transferencia de salida de datos para la validación de un archivo pem - cer
+ * Objeto de transferencia de datos para la salida del resultado de la verificación de firma
  * @author Gabino Reyes
  * @version 1.0
  */

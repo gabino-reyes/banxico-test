@@ -1,4 +1,11 @@
 <!doctype html>
+<!--
+/**
+ * Interfaz de usuario que permite proporcionar los datos necesarios para la verificación de la firma y mostrar el resultado
+ * @author Gabino Reyes
+ * @version 1.0
+ */
+-->
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -37,7 +44,7 @@
         <button type="button" class="btn btn-primary" onclick="verifySign()">Verificar firma</button>
     </form>
 </div>
-<button onclick="signTextUser()"> ok</button>
+<!--<button onclick="signTextUser()"> ok</button>-->
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -207,7 +214,7 @@
                 // sign data with a private key and output DigestInfo DER-encoded bytes
                 // (defaults to RSASSA PKCS#1 v1.5)
                 var md = forge.md.sha1.create();
-                md.update('sign this', 'utf8');
+                md.update(dataSign, 'utf8');
                 var signature = privateKey.sign(md);
                 //console.log(signature);
                 var encodedSign = forge.util.encode64(signature);

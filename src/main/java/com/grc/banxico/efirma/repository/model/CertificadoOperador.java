@@ -1,5 +1,12 @@
 package com.grc.banxico.efirma.repository.model;
 
+/**
+ * Clase que representa la abstracción de la tabla certificado_operador en B.D.
+ * @author Gabino Reyes
+ * @version 1.0
+ * @since   2022-06-24
+ */
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
