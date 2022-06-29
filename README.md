@@ -111,6 +111,7 @@ Se hace referencia de los links que sirvieron de inspiración de característica
 * https://stackoverflow.com/questions/9739121/convert-a-pem-formatted-string-to-a-java-security-cert-x509certificate
 * https://stackoverflow.com/questions/26888397/exception-in-thread-main-java-lang-verifyerror-class-org-bouncycastle-asn1-as/26996797#26996797
 * https://www.bouncycastle.org/fips-java/BCFipsIn100.pdf
+* https://www.tabnine.com/code/java/classes/org.bouncycastle.openssl.PEMEncryptedKeyPair
 
 Por si se ocupa
 * https://stackoverflow.com/questions/3820897/jpa-entity-without-id

@@ -15,4 +15,5 @@ public interface ICheckSignService {
 
     CertificadoOperador getCertificado(CheckSignRequestDto checkSignRequestDto);
     CheckSignResponseDto validateSign(CheckSignRequestDto checkSignRequestDto);
+    CheckSignResponseDto signResult(CheckSignRequestDto checkSignRequestDto, CheckSignResponseDto checkSignResponseDto);
 }

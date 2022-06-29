@@ -25,15 +25,11 @@ public class EfirmaController {
         this._checkSignService = iCheckSignService;
     }
 
-    @GetMapping()
-    public String get (){
-        return "get works";
-    }
-
     @PostMapping(path = "/validate", produces = MediaType.APPLICATION_JSON_VALUE)
     public CheckSignResponseDto validate(@RequestBody CheckSignRequestDto checkSignRequestDto)
     {
         log.info(checkSignRequestDto.toString());
-        return _checkSignService.validateSign(checkSignRequestDto);
+        CheckSignResponseDto response = _checkSignService.validateSign(checkSignRequestDto);
+        return _checkSignService.signResult(checkSignRequestDto, response);
     }
 }

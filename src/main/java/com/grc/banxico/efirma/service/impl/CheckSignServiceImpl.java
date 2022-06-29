@@ -14,11 +14,16 @@ import com.grc.banxico.efirma.repository.model.CertificadoOperador;
 import com.grc.banxico.efirma.service.ICheckSignService;
 import com.grc.banxico.efirma.service.ISignatureBouncyService;
 import com.grc.banxico.efirma.util.DateUtil;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
@@ -49,7 +54,6 @@ public class CheckSignServiceImpl implements ICheckSignService {
         X509Certificate certificate;
         boolean isVerifySign;
         signResponse.setDateTimeValidate(DateUtil.getDateValidate());
-        signResponse.setSign("");
 
         if(!validateDataInput(checkSignRequestDto)){
             signResponse.setResult("400|Parámetros insuficientes ó incorrectos");
@@ -86,11 +90,28 @@ public class CheckSignServiceImpl implements ICheckSignService {
 
         if(isVerifySign){
             signResponse.setResult("0|Ok");
-            signResponse.setSign("8994839ijfisdfk");
         }else{
             signResponse.setResult("608|Firma inválida");
         }
         return signResponse;
+    }
+
+    @Override
+    public CheckSignResponseDto signResult(CheckSignRequestDto checkSignRequestDto, CheckSignResponseDto checkSignResponseDto) {
+        String pathPrivateKey = "src/main/resources/data/usuarios/" + checkSignRequestDto.getCn().replaceAll("\\s", "") + "/" + checkSignRequestDto.getCn().replaceAll("\\s", "") + ".cve";
+        try {
+            File phraseFile = new File("src/main/resources/data/usuarios/" + checkSignRequestDto.getCn().replaceAll("\\s", "") + "/frase.txt");
+            String passphrase = new String(Files.readAllBytes(phraseFile.toPath()), Charset.defaultCharset());
+            PrivateKey privateKey = _bouncyService.getPrivateKey(new File(pathPrivateKey), passphrase);
+            byte[] sign = _bouncyService.signRSAPKCS1(privateKey,checkSignResponseDto.getResult() + "|" + checkSignResponseDto.getDateTimeValidate());
+            checkSignResponseDto.setSign(Base64.encodeBase64String(sign));
+        } catch (Exception e) {
+            checkSignResponseDto.setSign(null);
+            log.error("Error al firmar el resultado error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        log.info(checkSignResponseDto.toString());
+        return checkSignResponseDto;
     }
 
     private boolean validateDataInput(CheckSignRequestDto input){

@@ -9,6 +9,14 @@ package com.grc.banxico.efirma.service.impl;
 
 import com.grc.banxico.efirma.service.ISignatureBouncyService;
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
@@ -53,8 +61,33 @@ public class SignatureBouncyServiceImpl implements ISignatureBouncyService {
     }
 
     @Override
-    public PrivateKey getPrivateKey(File privateKeyFile, String passphrase) {
-        return null;
+    public PrivateKey getPrivateKey(File privateKeyFile, String passphrase) throws IOException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        PEMParser pemParser = new PEMParser(new FileReader(privateKeyFile));
+        Object object = pemParser.readObject();
+        PrivateKey privateKey;
+        PrivateKeyInfo keyInfo;
+
+        if (object instanceof PEMEncryptedKeyPair) {
+            //log.info("PEMEncryptedKeyPair 1 ");
+            PEMDecryptorProvider decryptor = new JcePEMDecryptorProviderBuilder().build(passphrase.toCharArray());
+            PEMKeyPair decryptedKeyPair = ((PEMEncryptedKeyPair) object).decryptKeyPair(decryptor);
+            keyInfo = decryptedKeyPair.getPrivateKeyInfo();
+            privateKey = new JcaPEMKeyConverter().getPrivateKey(keyInfo);
+        } else {
+            keyInfo = ((PEMKeyPair) object).getPrivateKeyInfo();
+            privateKey = new JcaPEMKeyConverter().getPrivateKey(keyInfo);
+        }
+        return privateKey;
+    }
+
+    @Override
+    public byte[] signRSAPKCS1(PrivateKey privateKey, String message) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        Signature signature = Signature.getInstance("SHA1withRSA", "BC");
+        signature.initSign(privateKey);
+        signature.update(message.getBytes("UTF8"));
+        return signature.sign();
     }
 
     @Override

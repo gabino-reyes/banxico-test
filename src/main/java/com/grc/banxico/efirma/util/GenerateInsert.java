@@ -10,12 +10,12 @@ package com.grc.banxico.efirma.util;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.pkcs.ContentInfo;
-import org.bouncycastle.asn1.pkcs.EncryptedPrivateKeyInfo;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.DERNull;
+import org.bouncycastle.asn1.pkcs.*;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cms.*;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
@@ -50,16 +50,20 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Collection;
 
 public class GenerateInsert {
-    public static void main(String[] args) throws CertificateException, NoSuchProviderException, IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, OperatorCreationException, PKCSException, InvalidKeySpecException, SignatureException, InvalidKeyException {
+    public static void main(String[] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
         File fileCrt = new File("src/main/resources/data/usuarios/usuario00/00000100000700000020.crt");
-        File filePrivateKey = new File("src/main/resources/data/usuarios/usuario00/usuario00.cve");
+        String userPath = "usuario 00".replaceAll("\\s", "");;
+        System.out.println("userPath = " + userPath);
+        File filePrivateKey = new File("src/main/resources/data/usuarios/" + userPath + "/" + userPath + ".cve");
+        File phrase = new File("src/main/resources/data/usuarios/" + userPath + "/frase.txt");
+        String key = new String(Files.readAllBytes(phrase.toPath()), Charset.defaultCharset());
+        System.out.println("key = " + key);
         String sign= "gaQEcacdXO0bS3U3k0AcLs4rJqmNIS9GKzzOOxlmKz0EV8PcmnFTrkb4RPdKu18A/RQmlYikHHWo68mrdkzoMXaMCvFVGyrANYFUfRV/71X2FDTvM2Z1IydxatBJ9NwTKbzzGjEsouzOayk6MqIOiSrph6zVxfUty2vspt5UmIZ7bdD6bJJpsZzQISKVgc9UT99bnclU/3TtQiWrf07LNpCIFQH52WrVEF5+dn5LgI41IE1p6Ob+r1Hi7h+oqmlYwFLBy5bR5CIDzbTPk8vqN+avg0i3m3IB6G3CPbqS5ynxVkW//B8tudGS98kwLWMOwqnyH42udstHo81PPrioXg==";
         String messageOriginal = "gabinousuario 003030303030313030303030373030303030303230";
         //X509Certificate certificate = getCrt(fileCrt);
         //System.out.println(verifySign(certificate,sign));
         //generateInsertStmt();
-
         //getPrivateKey(filePrivateKey, "usuario00");
     }
 
@@ -177,61 +181,39 @@ public class GenerateInsert {
         return signature.verify(encSignature);
     }
 
-    public static void getPrivateKey(File privateKeyFile, String passphrase) throws IOException, PKCSException, OperatorCreationException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public static void getPrivateKey(File privateKeyFile, String passphrase) throws Exception {
         // Se agrega el provider para encriptar PKCS8 keys
         Security.addProvider(new BouncyCastleProvider());
         System.out.println("privateKeyFile = " + privateKeyFile);
-        byte[] key2 = Files.readAllBytes(privateKeyFile.toPath());
-        System.out.println("key2 = " + key2);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(key2);
-        PrivateKey finalKey = keyFactory.generatePrivate(keySpec);
-        System.out.println(finalKey.getAlgorithm());
 
-
-        System.out.println("============================================================================ ");
-
-
-
-        String key = new String(Files.readAllBytes(privateKeyFile.toPath()), Charset.defaultCharset());
-        //System.out.println("key = " + key);
-        // reads your key file
         PEMParser pemParser = new PEMParser(new FileReader(privateKeyFile));
         Object object = pemParser.readObject();
-        JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-        KeyPair kp;
+        PrivateKey privateKey;
+        PrivateKeyInfo keyInfo;
 
         if (object instanceof PEMEncryptedKeyPair) {
             System.out.println("object 1 ");
-            // Encrypted key - we will use provided password
-            PEMEncryptedKeyPair ckp = (PEMEncryptedKeyPair) object;
-            // uses the password to decrypt the key
-            PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(passphrase.toCharArray());
-            kp = converter.getKeyPair(ckp.decryptKeyPair(decProv));
+            PEMDecryptorProvider decryptor = new JcePEMDecryptorProviderBuilder().build(passphrase.toCharArray());
+            PEMKeyPair decryptedKeyPair = ((PEMEncryptedKeyPair) object).decryptKeyPair(decryptor);
+            keyInfo = decryptedKeyPair.getPrivateKeyInfo();
+            privateKey = new JcaPEMKeyConverter().getPrivateKey(keyInfo);
+            System.out.println("privateKey = " + privateKey);
         } else {
-            // Unencrypted key - no password needed
-            System.out.println("object 2 ");
-            PEMKeyPair ukp = (PEMKeyPair) object;
-            kp = converter.getKeyPair(ukp);
+            keyInfo = ((PEMKeyPair) object).getPrivateKeyInfo();
+            privateKey = new JcaPEMKeyConverter().getPrivateKey(keyInfo);
         }
 
-// RSA
-        KeyFactory keyFac = KeyFactory.getInstance("RSA");
-        RSAPrivateCrtKeySpec privateKey = keyFac.getKeySpec(kp.getPrivate(), RSAPrivateCrtKeySpec.class);
+        ////// SIGN
+        String messageOriginal = "gabinousuario 003030303030313030303030373030303030303230";
+        Signature signature = Signature.getInstance("SHA1withRSA", "BC");
+        signature.initSign(privateKey);
+        signature.update(messageOriginal.getBytes("UTF8"));
+        byte[] sign = signature.sign();
+        System.out.println("sign = " + sign);
+        System.out.println("sign encoded = " + Base64.encodeBase64String(sign));
 
-        System.out.println(privateKey.getClass());
-
-
-
-
-        //ASN1Sequence asn1Sequence = ASN1Sequence.getInstance(Files.readAllBytes(privateKeyFile.toPath()));
-        /*KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PKCS8EncryptedPrivateKeyInfo pkcs8EncryptedPrivateKeyInfo = new PKCS8EncryptedPrivateKeyInfo(EncryptedPrivateKeyInfo.getInstance(key));
-        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
-        InputDecryptorProvider decryptorProvider = new JceOpenSSLPKCS8DecryptorProviderBuilder().build(passphrase.toCharArray());
-        PrivateKeyInfo privateKeyInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decryptorProvider);
-        PrivateKey privateKey = converter.getPrivateKey(privateKeyInfo);
-        System.out.println("privateKey = " + privateKey.getAlgorithm());
-        System.out.println("privateKey = " + privateKey);*/
     }
+    // String key = new String(Files.readAllBytes(privateKeyFile.toPath()), Charset.defaultCharset());
+    //System.out.println("key = " + key);
+    // reads your key file
 }
