@@ -50,7 +50,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Collection;
 
 public class GenerateInsert {
-    public static void main(String[] args) throws Exception {
+    /*public static void main(String[] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
         File fileCrt = new File("src/main/resources/data/usuarios/usuario00/00000100000700000020.crt");
         String userPath = "usuario 00".replaceAll("\\s", "");;
@@ -65,7 +65,7 @@ public class GenerateInsert {
         //System.out.println(verifySign(certificate,sign));
         //generateInsertStmt();
         //getPrivateKey(filePrivateKey, "usuario00");
-    }
+    }*/
 
     public static void generateInsertStmt() throws CertificateException, IOException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException, InvalidKeyException {
         for (int i = 0; i < 10; i++) {
