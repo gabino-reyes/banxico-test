@@ -70,6 +70,9 @@ public class SignatureBouncyServiceImpl implements ISignatureBouncyService {
 
         if (object instanceof PEMEncryptedKeyPair) {
             //log.info("PEMEncryptedKeyPair 1 ");
+            if(passphrase == null)
+                throw new RuntimeException("No se puede obtener la clave privada, frase de seguridad vacía.");
+
             PEMDecryptorProvider decryptor = new JcePEMDecryptorProviderBuilder().build(passphrase.toCharArray());
             PEMKeyPair decryptedKeyPair = ((PEMEncryptedKeyPair) object).decryptKeyPair(decryptor);
             keyInfo = decryptedKeyPair.getPrivateKeyInfo();

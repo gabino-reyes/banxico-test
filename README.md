@@ -78,7 +78,8 @@ El frontend es la interfaz de usuario que permite proporcionar los datos necesar
 2. Eso es todo, con los servicios arriba ya se puede hacer uso de la página
 
 ## Solución de problemas
-    TODO
+    
+1. Firmar con usuario 2, 3, 4 agregar su frase de seguridad en: ../efirma/src/main/resources/keys/passphrase.properties, re-iniciar la aplicación.
 
 ## Limitaciones del sistema
     TODO

@@ -27,6 +27,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
+import java.util.Properties;
 
 @Service
 public class CheckSignServiceImpl implements ICheckSignService {
@@ -98,11 +99,13 @@ public class CheckSignServiceImpl implements ICheckSignService {
 
     @Override
     public CheckSignResponseDto signResult(CheckSignRequestDto checkSignRequestDto, CheckSignResponseDto checkSignResponseDto) {
+        // TODO Mejorar constantes para hacerlo mas dinámico
         String pathPrivateKey = "src/main/resources/data/usuarios/" + checkSignRequestDto.getCn().replaceAll("\\s", "") + "/" + checkSignRequestDto.getCn().replaceAll("\\s", "") + ".cve";
         try {
-            File phraseFile = new File("src/main/resources/data/usuarios/" + checkSignRequestDto.getCn().replaceAll("\\s", "") + "/frase.txt");
-            String passphrase = new String(Files.readAllBytes(phraseFile.toPath()), Charset.defaultCharset());
-            PrivateKey privateKey = _bouncyService.getPrivateKey(new File(pathPrivateKey), passphrase);
+            Properties passphraseProperties = DateUtil.loadProperties("src/main/resources/keys/passphrase.properties");
+            //File phraseFile = new File("src/main/resources/data/usuarios/" + checkSignRequestDto.getCn().replaceAll("\\s", "") + "/frase.txt");
+            //String passphrase = new String(Files.readAllBytes(phraseFile.toPath()), Charset.defaultCharset());
+            PrivateKey privateKey = _bouncyService.getPrivateKey(new File(pathPrivateKey), passphraseProperties.getProperty(checkSignRequestDto.getSerie()));
             byte[] sign = _bouncyService.signRSAPKCS1(privateKey,checkSignResponseDto.getResult() + "|" + checkSignResponseDto.getDateTimeValidate());
             checkSignResponseDto.setSign(Base64.encodeBase64String(sign));
         } catch (Exception e) {
